@@ -1,0 +1,10 @@
+# environment
+.env
+.venv
+venv
+
+# python cache
+__pycache__ 
+
+# database
+blog.db
