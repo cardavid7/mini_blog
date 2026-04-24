@@ -71,7 +71,7 @@ class PostRepository:
         
         author_obj = None
         if author:
-            author_obj = self.ensure_author(author["name"], author["email"])
+            author_obj = self.ensure_author(author["username"], author["email"])
 
         tag_objs = []
         if tags:

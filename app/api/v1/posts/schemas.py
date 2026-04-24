@@ -24,7 +24,7 @@ class PostCreate(BaseModel):
     title: str = Field(..., min_length=3, max_length=100, description="Title of the post", example="First Post")
     content: Optional[str] = Field(min_length=10, default="Default content", description="Content of the post", example="This is the first post.")
     tags: Optional[List[Tag]] = Field(default_factory=list)  # []
-    author: Optional[Author] = None
+    # author: Optional[Author] = None
 
     @field_validator("title")
     @classmethod

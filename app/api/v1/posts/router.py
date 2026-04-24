@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from typing import List, Optional, Literal, Union
 from math import ceil
+from app.core.security import oauth2_scheme, get_current_user
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
@@ -102,14 +103,14 @@ def get_posts(
     return PostSummary.model_validate(post, from_attributes=True)
 
 @router.post("/", response_model=PostPublic, response_description="The created post", status_code=status.HTTP_201_CREATED)
-def create_posts(post: PostCreate = Body(...), db: Session = Depends(get_db)):  # ... is ellipsis, means body is required
+def create_posts(post: PostCreate = Body(...), db: Session = Depends(get_db), user=Depends(get_current_user)):  # ... is ellipsis, means body is required
 
     try:
         repository = PostRepository(db)
         new_post = repository.create_post(
             title=post.title,
             content=post.content,
-            author=post.author.model_dump() if post.author else None,
+            author=user,
             tags=[tag.model_dump() for tag in post.tags] if post.tags else None
         )
         return new_post
@@ -124,7 +125,7 @@ def create_posts(post: PostCreate = Body(...), db: Session = Depends(get_db)):  
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error creating post: {str(e)}")
 
 @router.put("/{id}", response_model=PostPublic, response_description="The updated post", response_model_exclude_none=True, status_code=status.HTTP_200_OK)
-def update_posts(id: int, data: PostUpdate = Body(...), db: Session = Depends(get_db)):
+def update_posts(id: int, data: PostUpdate = Body(...), db: Session = Depends(get_db), user=Depends(get_current_user)):
 
     repository = PostRepository(db)
     post = repository.get_by_id(id)
@@ -147,7 +148,7 @@ def update_posts(id: int, data: PostUpdate = Body(...), db: Session = Depends(ge
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error updating post: {str(e)}")
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_posts(id: int, db: Session = Depends(get_db)):
+def delete_posts(id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
 
     repository = PostRepository(db)
     post = repository.get_by_id(id)
@@ -161,3 +162,7 @@ def delete_posts(id: int, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error deleting post: {str(e)}")
+
+@router.get("/secure")
+def secure_endpoint(token: str = Depends(oauth2_scheme)):
+    return {"message": "Access with token", "token": token}
