@@ -7,8 +7,25 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from typing import List, Optional, Literal, Union
 from math import ceil
 from app.core.security import oauth2_scheme, get_current_user
+#import time
+#import asyncio
+#import threading
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
+
+"""
+@router.get("/sync")
+def sync_endpoint():
+    print("SYNC thread: ", threading.current_thread().name)
+    time.sleep(10)
+    return {"message": "function sync finished"}
+
+@router.get("/async")
+async def async_endpoint():
+    print("ASYNC thread: ", threading.current_thread().name)
+    await asyncio.sleep(10)
+    return {"message": "function async finished"}
+"""
 
 @router.get("", response_model=PaginatedPost)
 def list_posts(
