@@ -67,7 +67,7 @@ class PostRepository:
             self.db.flush()
         return tag_obj
 
-    def create_post(self, title: str, content: str, author: Optional[dict], tags: List[dict]) -> PostORM:
+    def create_post(self, title: str, content: str, author: Optional[dict], tags: List[dict], image_url: Optional[str]) -> PostORM:
         
         author_obj = None
         if author:
@@ -78,7 +78,7 @@ class PostRepository:
             for tag in tags:
                 tag_objs.append(self.ensure_tags(tag["name"]))
 
-        post = PostORM(title=title, content=content, author=author_obj, tags=tag_objs)
+        post = PostORM(title=title, content=content, author=author_obj, tags=tag_objs, image_url=image_url)
         self.db.add(post)
         self.db.commit()
         self.db.refresh(post)

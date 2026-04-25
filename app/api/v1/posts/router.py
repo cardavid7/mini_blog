@@ -1,12 +1,13 @@
 from app.core.db import get_db
-from .schemas import PostPublic, PaginatedPost, PostCreate, PostUpdate, PostSummary
+from .schemas import PostPublic, PaginatedPost, PostCreate, PostUpdate, PostSummary, Tag
 from .repository import PostRepository
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Path, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Path, Body, File, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from typing import List, Optional, Literal, Union
+from typing import List, Optional, Literal, Union, Annotated
 from math import ceil
 from app.core.security import oauth2_scheme, get_current_user
+from app.services.file_storage import save_uploaded_image
 #import time
 #import asyncio
 #import threading
@@ -120,15 +121,28 @@ def get_posts(
     return PostSummary.model_validate(post, from_attributes=True)
 
 @router.post("/", response_model=PostPublic, response_description="The created post", status_code=status.HTTP_201_CREATED)
-def create_posts(post: PostCreate = Body(...), db: Session = Depends(get_db), user=Depends(get_current_user)):  # ... is ellipsis, means body is required
+def create_posts(post: Annotated[PostCreate, Depends(PostCreate.as_form)], image: Optional[UploadFile] = File(None), db: Session = Depends(get_db), user=Depends(get_current_user)):  # ... is ellipsis, means body is required
 
+    saved_image = None
     try:
         repository = PostRepository(db)
+
+        if image:
+            saved_image = save_uploaded_image(image)
+
+        image_url = saved_image["file_url"] if saved_image else None
+
+        tag_dict = None
+        if post.tags:
+            tag_list = [Tag(name=tag.strip()) for tag in post.tags[0].name.split(",")]
+            tag_dict = [{"name": tag.name} for tag in tag_list]
+
         new_post = repository.create_post(
             title=post.title,
             content=post.content,
             author=user,
-            tags=[tag.model_dump() for tag in post.tags] if post.tags else None
+            tags=tag_dict,
+            image_url=image_url
         )
         return new_post
     except IntegrityError as e:
