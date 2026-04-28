@@ -60,7 +60,9 @@ class PostRepository:
 
     def ensure_tags(self, tag: str) -> TagORM:
 
-        tag_obj = self.db.execute(select(TagORM).where(TagORM.name.ilike(tag))).scalar_one_or_none()
+        tag = tag.strip().lower()
+
+        tag_obj = self.db.execute(select(TagORM).where(func.lower(TagORM.name) == tag)).scalar_one_or_none()
         if not tag_obj:
             tag_obj = TagORM(name=tag)
             self.db.add(tag_obj)
@@ -76,7 +78,12 @@ class PostRepository:
         tag_objs = []
         if tags:
             for tag in tags:
-                tag_objs.append(self.ensure_tags(tag["name"]))
+                names = tag["name"].split(",")
+                for name in names:
+                    name = name.strip().lower()
+                    if not name:
+                        continue
+                    tag_objs.append(self.ensure_tags(name))
 
         post = PostORM(title=title, content=content, author=author_obj, tags=tag_objs, image_url=image_url)
         self.db.add(post)

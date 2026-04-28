@@ -120,7 +120,7 @@ def get_posts(
 
     return PostSummary.model_validate(post, from_attributes=True)
 
-@router.post("/", response_model=PostPublic, response_description="The created post", status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=PostPublic, response_description="The created post", status_code=status.HTTP_201_CREATED)
 def create_posts(post: Annotated[PostCreate, Depends(PostCreate.as_form)], image: Optional[UploadFile] = File(None), db: Session = Depends(get_db), user=Depends(get_current_user)):  # ... is ellipsis, means body is required
 
     saved_image = None
@@ -132,16 +132,11 @@ def create_posts(post: Annotated[PostCreate, Depends(PostCreate.as_form)], image
 
         image_url = saved_image["file_url"] if saved_image else None
 
-        tag_dict = None
-        if post.tags:
-            tag_list = [Tag(name=tag.strip()) for tag in post.tags[0].name.split(",")]
-            tag_dict = [{"name": tag.name} for tag in tag_list]
-
         new_post = repository.create_post(
             title=post.title,
             content=post.content,
             author=user,
-            tags=tag_dict,
+            tags=[tag.model_dump() for tag in post.tags] if post.tags else None,
             image_url=image_url
         )
         return new_post
