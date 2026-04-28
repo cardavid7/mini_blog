@@ -5,8 +5,8 @@ from app.core.security import create_access_token, get_current_user
 from datetime import timedelta
 
 FAKE_USERS = {
-    "carlos@example.com": {"email": "carlos@example.com", "username": "carlos", "password": "secret123"},
-    "alumno@example.com":  {"email": "alumno@example.com",  "username": "alumno",  "password": "123456"},
+    "carlos@gmail.com": {"email": "carlos@gmail.com", "username": "carlos", "password": "secret123"},
+    "alumno@gmail.com":  {"email": "alumno@gmail.com",  "username": "alumno",  "password": "123456"},
 }
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
