@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.v1.tags.repository import TagRepository
 from app.api.v1.tags.schemas import TagCreate, TagPublic, TagUpdate
 from app.core.db import get_db
-from app.core.security import get_current_user, require_editor, require_admin, require_user
+from app.core.security import require_editor, require_admin, require_user
 
 
 router = APIRouter(prefix="/tags", tags=["Tags"])

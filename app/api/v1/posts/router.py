@@ -1,12 +1,12 @@
 from app.core.db import get_db
-from .schemas import PostPublic, PaginatedPost, PostCreate, PostUpdate, PostSummary, Tag
+from .schemas import PostPublic, PaginatedPost, PostCreate, PostUpdate, PostSummary
 from .repository import PostRepository
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Path, Body, File, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from typing import List, Optional, Literal, Union, Annotated
 from math import ceil
-from app.core.security import oauth2_scheme, get_current_user
+from app.core.security import oauth2_scheme, require_admin, require_editor
 from app.services.file_storage import save_uploaded_image
 #import time
 #import asyncio
@@ -121,7 +121,7 @@ def get_posts(
     return PostSummary.model_validate(post, from_attributes=True)
 
 @router.post("", response_model=PostPublic, response_description="The created post", status_code=status.HTTP_201_CREATED)
-def create_posts(post: Annotated[PostCreate, Depends(PostCreate.as_form)], image: Optional[UploadFile] = File(None), db: Session = Depends(get_db), user=Depends(get_current_user)):  # ... is ellipsis, means body is required
+def create_posts(post: Annotated[PostCreate, Depends(PostCreate.as_form)], image: Optional[UploadFile] = File(None), db: Session = Depends(get_db), _editor=Depends(require_editor)):  # ... is ellipsis, means body is required
 
     saved_image = None
     try:
@@ -135,7 +135,7 @@ def create_posts(post: Annotated[PostCreate, Depends(PostCreate.as_form)], image
         new_post = repository.create_post(
             title=post.title,
             content=post.content,
-            author=user,
+            author=_editor,
             tags=[tag.model_dump() for tag in post.tags] if post.tags else None,
             image_url=image_url
         )
@@ -151,7 +151,7 @@ def create_posts(post: Annotated[PostCreate, Depends(PostCreate.as_form)], image
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error creating post: {str(e)}")
 
 @router.put("/{id}", response_model=PostPublic, response_description="The updated post", response_model_exclude_none=True, status_code=status.HTTP_200_OK)
-def update_posts(id: int, data: PostUpdate = Body(...), db: Session = Depends(get_db), user=Depends(get_current_user)):
+def update_posts(id: int, data: PostUpdate = Body(...), db: Session = Depends(get_db), _editor=Depends(require_editor)):
 
     repository = PostRepository(db)
     post = repository.get_by_id(id)
@@ -174,7 +174,7 @@ def update_posts(id: int, data: PostUpdate = Body(...), db: Session = Depends(ge
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error updating post: {str(e)}")
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_posts(id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def delete_posts(id: int, db: Session = Depends(get_db), _admin=Depends(require_admin)):
 
     repository = PostRepository(db)
     post = repository.get_by_id(id)
