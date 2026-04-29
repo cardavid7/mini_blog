@@ -6,8 +6,9 @@ from typing import List, Optional, TYPE_CHECKING
 from app.core.db import Base
 
 if TYPE_CHECKING:
-    from .author import AuthorORM
+    from .user import UserORM
     from .tag import TagORM
+    from .category import CategoryORM
 
 post_tags = Table(
     "post_tags",
@@ -26,6 +27,10 @@ class PostORM(Base):
     image_url: Mapped[str] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=-5))), nullable=False)
 
-    author_id: Mapped[Optional[int]] = mapped_column(ForeignKey("authors.id"))
-    author: Mapped[Optional["AuthorORM"]] = relationship(back_populates="posts")
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"))
+    user: Mapped[Optional["UserORM"]] = relationship(back_populates="posts")
+
+    category_id: Mapped[Optional[int]] = mapped_column(ForeignKey("categories.id", ondelete="SET NULL"), nullable=True, index=True)
+    category = relationship("CategoryORM", back_populates="posts")
+
     tags: Mapped[List["TagORM"]] = relationship(secondary=post_tags, back_populates="posts", lazy="selectin", passive_deletes=True)

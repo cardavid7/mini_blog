@@ -1,8 +1,9 @@
 from sqlalchemy import Boolean, Integer, String, DateTime, Enum
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime, timezone, timedelta
-from typing import Literal
+from typing import List, Literal
 from app.core.db import Base
+from app.models.post import PostORM
 
 Role = Literal["admin", "editor", "user"]
 
@@ -17,3 +18,4 @@ class UserORM(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=-5))), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=-5))), nullable=False)
     
+    posts: Mapped[List["PostORM"]] = relationship(back_populates="user")

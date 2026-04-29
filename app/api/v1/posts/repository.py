@@ -1,7 +1,9 @@
+from fastapi import Depends
 from sqlalchemy.orm import Session, selectinload, joinedload
 from typing import Optional, List
 from sqlalchemy import select, func
-from app.models import PostORM, AuthorORM, TagORM
+from app.core.security import get_current_user
+from app.models import PostORM, TagORM, UserORM
 from math import ceil
 
 class PostRepository:
@@ -42,21 +44,18 @@ class PostRepository:
 
         post_list = (select(PostORM).options(
             selectinload(PostORM.tags),
-            joinedload(PostORM.author),
+            joinedload(PostORM.user),
         ).where(
             PostORM.tags.any(func.lower(TagORM.name).in_(normalized_tag_names))
         ).order_by(PostORM.id.asc()))
 
         return self.db.execute(post_list).scalars().all()
 
-    def ensure_author(self, name:str, email:str) -> AuthorORM:
+    def ensure_user(self, email:str) -> UserORM:
 
-        author_obj = self.db.execute(select(AuthorORM).where(AuthorORM.email == email)).scalar_one_or_none()
-        if not author_obj:
-            author_obj = AuthorORM(name=name, email=email)
-            self.db.add(author_obj)
-            self.db.flush()
-        return author_obj
+        user_obj = self.db.execute(select(UserORM).where(UserORM.email == email)).scalar_one_or_none()
+
+        return user_obj
 
     def ensure_tags(self, tag: str) -> TagORM:
 
@@ -69,11 +68,11 @@ class PostRepository:
             self.db.flush()
         return tag_obj
 
-    def create_post(self, title: str, content: str, author: Optional[dict], tags: List[dict], image_url: Optional[str]) -> PostORM:
+    def create_post(self, title: str, content: str, tags: List[dict], image_url: Optional[str], category_id: Optional[int], user: UserORM = Depends(get_current_user)) -> PostORM:
         
-        author_obj = None
-        if author:
-            author_obj = self.ensure_author(author["username"], author["email"])
+        user_obj = None
+        if user:
+            user_obj = self.ensure_user(user.email)
 
         tag_objs = []
         if tags:
@@ -85,7 +84,7 @@ class PostRepository:
                         continue
                     tag_objs.append(self.ensure_tags(name))
 
-        post = PostORM(title=title, content=content, author=author_obj, tags=tag_objs, image_url=image_url)
+        post = PostORM(title=title, content=content, user=user_obj, tags=tag_objs, image_url=image_url, category_id=category_id)
         self.db.add(post)
         self.db.commit()
         self.db.refresh(post)

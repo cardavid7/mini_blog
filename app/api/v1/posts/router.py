@@ -1,6 +1,7 @@
 from app.core.db import get_db
-from .schemas import PostPublic, PaginatedPost, PostCreate, PostUpdate, PostSummary
-from .repository import PostRepository
+from app.api.v1.posts.schemas import PostPublic, PaginatedPost, PostCreate, PostUpdate, PostSummary
+from app.api.v1.posts.repository import PostRepository
+from app.api.v1.categories.repository import CategoryRepository
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Path, Body, File, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -121,12 +122,16 @@ def get_posts(
     return PostSummary.model_validate(post, from_attributes=True)
 
 @router.post("", response_model=PostPublic, response_description="The created post", status_code=status.HTTP_201_CREATED)
-def create_posts(post: Annotated[PostCreate, Depends(PostCreate.as_form)], image: Optional[UploadFile] = File(None), db: Session = Depends(get_db), _editor=Depends(require_editor)):  # ... is ellipsis, means body is required
+def create_posts(post: Annotated[PostCreate, Depends(PostCreate.as_form)], image: Optional[UploadFile] = File(None), db: Session = Depends(get_db), user=Depends(require_editor)):  # ... is ellipsis, means body is required
 
     saved_image = None
     try:
-        repository = PostRepository(db)
+        repository_category = CategoryRepository(db)
+        category = repository_category.get_by_id(post.category_id)
+        if not category:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
 
+        repository = PostRepository(db)
         if image:
             saved_image = save_uploaded_image(image)
 
@@ -135,7 +140,8 @@ def create_posts(post: Annotated[PostCreate, Depends(PostCreate.as_form)], image
         new_post = repository.create_post(
             title=post.title,
             content=post.content,
-            author=_editor,
+            user=user,
+            category_id=post.category_id,
             tags=[tag.model_dump() for tag in post.tags] if post.tags else None,
             image_url=image_url
         )
@@ -189,6 +195,6 @@ def delete_posts(id: int, db: Session = Depends(get_db), _admin=Depends(require_
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error deleting post: {str(e)}")
 
-@router.get("/secure")
-def secure_endpoint(token: str = Depends(oauth2_scheme)):
-    return {"message": "Access with token", "token": token}
+# @router.get("/secure")
+# def secure_endpoint(token: str = Depends(oauth2_scheme)):
+#     return {"message": "Access with token", "token": token}
