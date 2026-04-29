@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from typing import List, Optional, Literal, Union, Annotated
 from math import ceil
-from app.core.security import oauth2_scheme, require_admin, require_editor
+from app.core.security import require_admin, require_editor
 from app.services.file_storage import save_uploaded_image
 #import time
 #import asyncio
