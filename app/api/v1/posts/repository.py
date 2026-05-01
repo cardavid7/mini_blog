@@ -5,6 +5,7 @@ from sqlalchemy import select, func
 from app.core.security import get_current_user
 from app.models import PostORM, TagORM, UserORM
 from math import ceil
+from app.utils.slugify_utils import ensure_unique_slug
 
 class PostRepository:
     def __init__(self, db: Session):
@@ -35,6 +36,10 @@ class PostRepository:
         items = self.db.execute(results.limit(per_page).offset(start)).scalars().all()
 
         return total, items
+
+    def get_by_slug(self, slug: str) -> Optional[PostORM]:
+        query = select(PostORM).where(PostORM.slug == slug)
+        return self.db.execute(query).scalar_one_or_none()
 
     def get_by_tags(self, tags: List[str]) -> List[PostORM]:
 
@@ -84,7 +89,9 @@ class PostRepository:
                         continue
                     tag_objs.append(self.ensure_tags(name))
 
-        post = PostORM(title=title, content=content, user=user_obj, tags=tag_objs, image_url=image_url, category_id=category_id)
+        unique_slug = ensure_unique_slug(self.db, title)
+
+        post = PostORM(title=title, slug=unique_slug, content=content, user=user_obj, tags=tag_objs, image_url=image_url, category_id=category_id)
         self.db.add(post)
         self.db.commit()
         self.db.refresh(post)

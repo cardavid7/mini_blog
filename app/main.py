@@ -31,7 +31,10 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Mini Blog", 
         description="This is a simple blog API", 
-        version="1.0.0"
+        version="1.0.0",
+        swagger_ui_parameters={
+            "persistAuthorization": True,
+        }
     )
     Base.metadata.create_all(bind=engine)  # development
     app.include_router(auth_router, prefix="/api/v1")

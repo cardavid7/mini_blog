@@ -6,3 +6,4 @@ pydantic[email]
 psycopg[binary]
 PyJWT
 pwdlib[argon2]
+python-slugify

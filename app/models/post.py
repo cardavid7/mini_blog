@@ -25,6 +25,7 @@ class PostORM(Base):
     title: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     image_url: Mapped[str] = mapped_column(String(255), nullable=True)
+    slug: Mapped[str] = mapped_column(String(160), unique=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=-5))), nullable=False)
 
     user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"))
