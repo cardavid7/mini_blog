@@ -18,22 +18,15 @@ USERS = [
         "role": "user"
     },
     {
-        "email": "ricardo@example.com",
-        "full_name": "Ricardo Cuéllar",
+        "email": "carlos@example.com",
+        "full_name": "Carlos S.",
         "password": "pruebas123!",
         "role": "admin"
     },
     {
-        "email": "fernando@example.com",
-        "full_name": "Fernando Herrera",
+        "email": "david@example.com",
+        "full_name": "David S.",
         "password": "pruebas123!",
         "role": "editor"
-    },
-    {
-        "email": "juanperez@example.com",
-        "full_name": "Juan Pérez",
-        "password": "pruebas123!",
-        "role": "user"
-    },
-
+    }
 ]
