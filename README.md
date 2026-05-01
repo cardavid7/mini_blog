@@ -81,30 +81,59 @@ Alternatively, run Uvicorn directly:
 uvicorn app.main:app --reload
 ```
 
+## 🌱 Database Seeding
+
+You can populate the database with initial data using the provided seed scripts:
+
+```bash
+# Seed all data
+python -m app.seeds all
+
+# Or run specific seeds individually
+python -m app.seeds users
+python -m app.seeds categories
+python -m app.seeds tags
+```
+
 ## 📚 API Documentation
 
 Once the server is running, you can access the automatic interactive API documentation:
 - **Swagger UI:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 - **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 
-## 🔐 Example Endpoints
+## 🔐 API Endpoints
 
 ### 👤 Authentication & Users
-- `POST /api/v1/auth/token` - Login to get the JWT Bearer token
 - `POST /api/v1/auth/register` - Register a new user account
+- `POST /api/v1/auth/login` - Login to get the JWT Bearer token and user info
+- `GET /api/v1/auth/me` - Get current logged-in user profile
 - `PUT /api/v1/auth/role/{id}` - Change user role (Admin only)
+- `POST /api/v1/auth/token` - Login to get the JWT Bearer token (OAuth2)
 
 ### 🏷️ Tags
-- `GET /api/v1/tags` - List tags with pagination and search
-- `GET /api/v1/tags/popular/top` - Get the most popular tags (User only)
-- `POST /api/v1/tags` - Create a new tag (Editor/Admin only)
-- `PUT /api/v1/tags/{id}` - Update a tag (Editor/Admin only)
-- `DELETE /api/v1/tags/{id}` - Delete a tag (Admin only)
+- `GET /tags` - List tags with pagination and search
+- `POST /tags` - Create a new tag (Editor/Admin only)
+- `PUT /tags/{id}` - Update a tag (Editor/Admin only)
+- `DELETE /tags/{id}` - Delete a tag (Admin only)
+- `GET /tags/popular/top` - Get the most popular tags (User only)
 
 ### 📝 Posts
-- `GET /api/v1/posts` - List posts with pagination, sorting, and filtering
-- `GET /api/v1/posts/by-tags` - List posts by tags (User only)
-- `GET /api/v1/posts/{id}` - Retrieve a specific post by its ID
-- `POST /api/v1/posts` - Create a new post with optional image upload (Editor/Admin only)
-- `PUT /api/v1/posts/{id}` - Update an existing post (Editor/Admin only)
-- `DELETE /api/v1/posts/{id}` - Delete a post (Admin only)
+- `GET /posts` - List posts with pagination, sorting, and filtering
+- `POST /posts` - Create a new post with optional image upload (Editor/Admin only)
+- `GET /posts/by-tags` - List posts by tags
+- `GET /posts/{id}` - Retrieve a specific post by its ID
+- `PUT /posts/{id}` - Update an existing post (Editor/Admin only)
+- `DELETE /posts/{id}` - Delete a post (Admin only)
+- `GET /posts/post/{slug}` - Retrieve a specific post by its slug
+
+### 📁 Categories
+- `GET /categories` - List categories with pagination
+- `POST /categories` - Create a new category
+- `GET /categories/{id}` - Retrieve a specific category by its ID
+- `PUT /categories/{id}` - Update a category
+- `DELETE /categories/{id}` - Delete a category
+
+### 📤 Uploads
+- `POST /upload/bytes` - Upload an image as bytes
+- `POST /upload/file` - Upload file to get metadata
+- `POST /upload/save` - Save uploaded image to the media directory
