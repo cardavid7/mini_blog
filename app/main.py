@@ -21,6 +21,12 @@ MEDIA_DIR = "app/media"
 # fastapi dev app/main.py                       # run the server with hot reload
 # deactivate                                    # deactivate virtual environment
 
+# run seed scripts
+# python3 -m app.seeds all
+# python3 -m app.seeds users
+# python3 -m app.seeds categories
+# python3 -m app.seeds tags
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Mini Blog", 
